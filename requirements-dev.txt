@@ -1,0 +1,4 @@
+# Ferramentas só para desenvolvimento e testes (não vão para o Vercel)
+-r requirements.txt
+pytest==9.1.1
+httpx==0.28.1

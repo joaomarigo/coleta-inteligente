@@ -1,0 +1,17 @@
+# Não enviar ao Vercel: dados locais, segredos, firmware, testes e ferramentas
+*.db
+*.db-*
+*.db.anterior
+backups
+__pycache__
+.pytest_cache
+.env*
+coleta_inteligente_esp32
+tests
+requirements-dev.txt
+*.bat
+.claude
+.agents
+skills-lock.json
+docs
+README-LOCAL.md

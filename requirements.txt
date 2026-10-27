@@ -1,0 +1,7 @@
+# Dependências do servidor (instaladas também pelo Vercel no deploy).
+# Versões fixas para a instalação ser igual em qualquer computador.
+fastapi==0.141.1
+uvicorn[standard]==0.53.0
+psycopg[binary]==3.3.6
+psycopg-pool==3.3.3
+python-dotenv==1.2.3

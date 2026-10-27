@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#1e8449">
+<title>Coleta Inteligente</title>
+<link rel="icon" href="/static/logo.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/static/vendor/fonts/fonts.css">
+<link rel="stylesheet" href="/static/vendor/leaflet/leaflet.css">
+<link rel="stylesheet" href="/static/style.css?v=__VERSAO__">
+<script src="/static/vendor/leaflet/leaflet.js"></script>
+<script src="/static/vendor/chart.umd.min.js"></script>
+</head>
+<body>
+
+<!-- ================= LOGIN (RF04) ================= -->
+<div id="tela-login" hidden>
+  <form class="login-card" id="form-login" novalidate>
+    <div class="logo"><span class="logo-svg"></span><div class="logo-texto">Coleta Inteligente</div></div>
+    <p class="intro">Acesse o painel de monitoramento das lixeiras</p>
+    <label class="campo">E-mail
+      <input type="email" id="login-email" autocomplete="username" required>
+    </label>
+    <label class="campo">Senha
+      <input type="password" id="login-senha" autocomplete="current-password" required>
+    </label>
+    <div class="erro" id="login-erro"></div>
+    <button class="btn" type="submit" id="login-botao">Entrar</button>
+    <a class="voltar-site" href="/">← Voltar para o site do projeto</a>
+  </form>
+</div>
+
+<!-- ================= APP ================= -->
+<div id="app" hidden>
+  <div class="topo-mobile">
+    <div class="logo"><span class="logo-svg"></span><div class="logo-texto">Coleta Inteligente</div></div>
+    <button class="btn secundario pequeno" data-acao="sair">Sair</button>
+  </div>
+
+  <aside class="menu">
+    <div class="logo">
+      <span class="logo-svg"></span>
+      <div class="logo-texto">Coleta Inteligente<small>Gestão de resíduos</small></div>
+    </div>
+    <nav>
+      <a href="#/dashboard" data-menu="dashboard">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>
+        Dashboard
+      </a>
+      <a href="#/alertas" data-menu="alertas">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
+        Alertas
+        <span class="badge" id="badge-alertas" hidden>0</span>
+      </a>
+      <a href="#/mapa" data-menu="mapa">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3 3 6v15l6-3 6 3 6-3V3l-6 3z"/><path d="M9 3v15M15 6v15"/></svg>
+        Mapa
+      </a>
+      <a href="#/configuracoes" data-menu="configuracoes">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        Configurações
+      </a>
+    </nav>
+    <div class="usuario">
+      <span id="usuario-email"></span>
+      <button class="btn secundario pequeno" data-acao="sair">Sair</button>
+    </div>
+  </aside>
+
+  <main id="conteudo">
+
+    <!-- ===== DASHBOARD (RF06) ===== -->
+    <section data-tela="dashboard" hidden>
+      <div class="cabecalho-tela">
+        <div>
+          <h1>Dashboard</h1>
+          <p>Situação atual das lixeiras monitoradas</p>
+        </div>
+        <div class="atualizacao" id="indicador-atualizacao"><span class="dot"></span><span>atualizando...</span></div>
+      </div>
+
+      <a class="banner-alerta" href="#/alertas" id="banner-alerta" hidden>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4M12 17h.01"/></svg>
+        <span id="banner-texto"></span>
+        <span class="acao">Ver alertas →</span>
+      </a>
+
+      <div class="resumo">
+        <div class="resumo-item" style="--cor: var(--cheia)">
+          <div class="numero" id="qtd-cheias">–</div>
+          <div class="rotulo">Cheias</div>
+          <div class="faixa">80% ou mais</div>
+        </div>
+        <div class="resumo-item" style="--cor: var(--parcial)">
+          <div class="numero" id="qtd-parciais">–</div>
+          <div class="rotulo">Parciais</div>
+          <div class="faixa">51% a 79%</div>
+        </div>
+        <div class="resumo-item" style="--cor: var(--vazia)">
+          <div class="numero" id="qtd-vazias">–</div>
+          <div class="rotulo">Vazias</div>
+          <div class="faixa">até 50%</div>
+        </div>
+        <div class="resumo-item" style="--cor: var(--offline)">
+          <div class="numero" id="qtd-offline">–</div>
+          <div class="rotulo">Sensores offline</div>
+          <div class="faixa">sem leitura há +10 min</div>
+        </div>
+      </div>
+
+      <div class="painel">
+        <h2>Lixeiras</h2>
+        <p class="subtitulo">Ordenadas da mais cheia para a mais vazia. Clique para ver os detalhes.</p>
+        <div class="lista-lixeiras" id="lista-lixeiras"></div>
+      </div>
+    </section>
+
+    <!-- ===== DETALHES DA LIXEIRA (RF08) ===== -->
+    <section data-tela="detalhes" hidden>
+      <a class="voltar" href="#/dashboard">← Voltar ao dashboard</a>
+      <div class="cabecalho-tela">
+        <div>
+          <h1 id="det-nome">–</h1>
+          <p id="det-endereco"></p>
+        </div>
+        <div id="det-chips"></div>
+      </div>
+
+      <div class="grade-detalhes">
+        <div class="painel">
+          <h2>Nível atual</h2>
+          <div class="nivel-atual">
+            <div id="det-gauge"></div>
+            <div>
+              <div class="valor" id="det-nivel">–</div>
+              <div id="det-status"></div>
+            </div>
+          </div>
+        </div>
+        <div class="painel">
+          <h2>Status do sensor</h2>
+          <dl class="dados" id="det-sensor"></dl>
+        </div>
+        <div class="painel">
+          <h2>Localização</h2>
+          <dl class="dados" id="det-local"></dl>
+          <div id="mapa-detalhe"></div>
+        </div>
+      </div>
+
+      <div class="painel">
+        <div class="cabecalho-grafico">
+          <h2>Histórico de preenchimento</h2>
+          <div class="periodos" id="periodos">
+            <button data-horas="1">1 h</button>
+            <button data-horas="24" class="ativo">24 h</button>
+            <button data-horas="168">7 dias</button>
+          </div>
+        </div>
+        <div class="grafico-container">
+          <canvas id="grafico-historico"></canvas>
+          <div class="vazio" id="historico-vazio" hidden><strong>Sem leituras no período</strong>Assim que o sensor enviar dados, o gráfico aparece aqui.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== ALERTAS (RF07) ===== -->
+    <section data-tela="alertas" hidden>
+      <div class="cabecalho-tela">
+        <div>
+          <h1>Alertas</h1>
+          <p id="alertas-subtitulo">Lixeiras acima do limite de alerta, ordenadas por prioridade</p>
+        </div>
+        <a class="btn secundario pequeno" href="#/configuracoes">Ajustar limite</a>
+      </div>
+      <div class="painel">
+        <div id="lista-alertas"></div>
+      </div>
+    </section>
+
+    <!-- ===== CONFIGURAÇÕES (RF05 / RN02) ===== -->
+    <section data-tela="configuracoes" hidden>
+      <div class="cabecalho-tela">
+        <div>
+          <h1>Configurações</h1>
+          <p>Limite de alerta e cadastro de lixeiras</p>
+        </div>
+      </div>
+
+      <div class="grade-config">
+        <div class="painel">
+          <h2>Limite de alerta</h2>
+          <p class="subtitulo">Lixeiras com ocupação igual ou acima deste valor geram alerta e entram na rota de coleta. Padrão: 80%.</p>
+          <form id="form-limite" class="limite-controle">
+            <input type="range" id="limite-range" min="50" max="100" step="1">
+            <input type="number" id="limite-numero" min="1" max="100" step="1">
+            <span>%</span>
+            <button class="btn" type="submit">Salvar</button>
+            <button class="btn secundario" type="button" id="limite-padrao">Restaurar 80%</button>
+          </form>
+          <div class="sucesso" id="limite-msg"></div>
+        </div>
+
+        <div class="painel">
+          <div class="cabecalho-grafico">
+            <h2>Lixeiras cadastradas</h2>
+            <button class="btn pequeno" id="btn-nova-lixeira">+ Nova lixeira</button>
+          </div>
+          <div class="tabela-wrapper">
+            <table class="tabela">
+              <thead>
+                <tr><th>ID do dispositivo</th><th>Nome</th><th>Altura</th><th>Tipo</th><th></th></tr>
+              </thead>
+              <tbody id="tabela-lixeiras"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="painel" id="painel-form-lixeira" hidden>
+          <h2 id="form-lixeira-titulo">Nova lixeira</h2>
+          <form class="form-lixeira" id="form-lixeira" novalidate>
+            <label class="campo">ID do dispositivo (igual ao configurado no ESP32)
+              <input type="text" name="dispositivo_id" placeholder="lixeira-06" required pattern="[A-Za-z0-9_\-]+">
+            </label>
+            <label class="campo">Nome
+              <input type="text" name="nome" placeholder="Praça Central" required>
+            </label>
+            <label class="campo largo">Endereço
+              <input type="text" name="endereco" placeholder="Rua, número, bairro">
+            </label>
+            <label class="campo">Altura útil da lixeira (cm)
+              <input type="number" name="altura_cm" min="1" max="1000" step="0.1" value="100" required>
+              <span class="dica">Distância do sensor até o fundo vazio. Usada para calcular o % quando o ESP32 envia só a distância.</span>
+            </label>
+            <label class="campo">Tipo
+              <select name="tipo">
+                <option value="real">Sensor real (ESP32)</option>
+                <option value="simulada">Simulada (demonstração)</option>
+              </select>
+            </label>
+            <label class="campo">Latitude
+              <input type="number" name="lat" step="any" required>
+            </label>
+            <label class="campo">Longitude
+              <input type="number" name="lng" step="any" required>
+            </label>
+            <div class="largo">
+              <div id="mapa-form"></div>
+              <span class="dica">Clique no mapa para definir a localização.</span>
+            </div>
+            <div class="erro largo" id="form-lixeira-erro"></div>
+            <div class="botoes-form largo">
+              <button class="btn" type="submit">Salvar</button>
+              <button class="btn secundario" type="button" id="btn-cancelar-form">Cancelar</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== MAPA E ROTA (prévia - evolução futura) ===== -->
+    <section data-tela="mapa" hidden>
+      <div class="cabecalho-tela">
+        <div>
+          <h1>Mapa e rota de coleta</h1>
+          <p id="subtitulo-rota">Lixeiras acima do limite de alerta entram na rota sugerida.</p>
+        </div>
+      </div>
+      <div class="aviso-futuro">
+        Prévia: a otimização de rotas é uma evolução futura do projeto (fora do escopo do MVP deste semestre).
+      </div>
+      <div class="legenda">
+        <span class="item"><span class="dot" style="background:var(--vazia)"></span> vazia (até 50%)</span>
+        <span class="item"><span class="dot" style="background:var(--parcial)"></span> parcial (51–79%)</span>
+        <span class="item"><span class="dot" style="background:var(--cheia)"></span> cheia (80%+)</span>
+        <span class="item"><span class="dot" style="background:#5b6b62"></span> central de triagem</span>
+      </div>
+      <div class="mapa-rota-container">
+        <div id="mapa"></div>
+        <div class="painel">
+          <div class="rota-resumo">
+            <div class="numero" id="rota-distancia">—</div>
+            <div class="legenda-numero" id="rota-legenda">calculando rota...</div>
+          </div>
+          <ol id="lista-paradas"></ol>
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<script src="/static/app.js?v=__VERSAO__"></script>
+</body>
+</html>

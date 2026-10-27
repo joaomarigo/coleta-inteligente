@@ -1,0 +1,20 @@
+# Configuração local e segredos (DATABASE_URL, senhas, tokens)
+.vercel
+.env*
+!.env.example
+
+# Bancos locais (modo offline e testes) e backups com dados
+*.db
+*.db-*
+*.db.anterior
+backups/
+
+# Python
+__pycache__/
+.pytest_cache/
+*.pyc
+
+# Ferramentas do assistente de código (não fazem parte do projeto)
+.agents/
+.claude/
+skills-lock.json

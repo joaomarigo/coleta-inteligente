@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#1e8449">
+<title>Coleta Inteligente</title>
+<meta name="description" content="Lixeiras com sensor que avisam quando precisam ser coletadas. Veja ao vivo o nível da lixeira do protótipo.">
+<meta property="og:title" content="Coleta Inteligente">
+<meta property="og:description" content="Veja ao vivo o nível da lixeira monitorada por ESP32 e sensor ultrassônico.">
+<meta property="og:image" content="/static/fotos/maquete-lixeira.jpg">
+<link rel="icon" href="/static/logo.svg" type="image/svg+xml">
+<script src="/static/redireciona-painel.js?v=__VERSAO__"></script>
+<link rel="preload" href="/static/vendor/fonts/barlow-condensed-700.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="/static/vendor/fonts/fonts.css">
+<link rel="stylesheet" href="/static/vendor/leaflet/leaflet.css">
+<link rel="stylesheet" href="/static/landing.css?v=__VERSAO__">
+<script src="/static/vendor/leaflet/leaflet.js" defer></script>
+<script src="/static/vendor/chart.umd.min.js" defer></script>
+<script src="/static/landing.js?v=__VERSAO__" defer></script>
+</head>
+<body>
+
+<header class="nav">
+  <div class="container nav-inner">
+    <a class="marca" href="#topo">
+      <img src="/static/logo.svg" alt="" width="34" height="34">
+      <span>Coleta Inteligente</span>
+    </a>
+    <nav class="nav-links">
+      <a href="#ao-vivo">Ao vivo</a>
+      <a href="#como-funciona">Como funciona</a>
+      <a href="#prototipo">Protótipo</a>
+      <a href="#tecnologia">Tecnologia</a>
+    </nav>
+    <a class="btn btn-contorno btn-pequeno" href="/painel">Área do gestor</a>
+  </div>
+</header>
+
+<main id="topo">
+
+  <!-- ============ HERO ============ -->
+  <section class="hero">
+    <div class="container hero-grid">
+      <div class="hero-texto">
+        <p class="sobretitulo">Projeto Prático Integrado · Robótica e Sistemas Smart Embarcados</p>
+        <h1>Lixeiras que avisam quando precisam ser coletadas.</h1>
+        <p class="lead">Um sensor no topo da lixeira mede o nível do lixo e envia os dados pela internet.
+          A coleta deixa de seguir rotas fixas e passa a ir só onde é preciso.</p>
+        <div class="hero-acoes">
+          <a class="btn" href="#ao-vivo">Ver todas ao vivo</a>
+          <a class="btn btn-contorno" href="#como-funciona">Como funciona</a>
+        </div>
+      </div>
+
+      <!-- Lixeira real (ESP32) em destaque -->
+      <article class="card-real" id="card-real" aria-live="polite">
+        <div class="card-real-topo">
+          <span class="selo-real"><span class="pulso"></span><span id="real-selo">Sensor real (ESP32) · ao vivo</span></span>
+          <span class="atualizado" id="real-atualizado">conectando...</span>
+        </div>
+        <div class="card-real-corpo">
+          <div class="lixeira-grafico" aria-hidden="true">
+            <div class="tampa"></div>
+            <div class="corpo">
+              <div class="nivel" id="real-nivel-barra"></div>
+              <div class="linha-limite" id="real-linha-limite"><span>alerta</span></div>
+            </div>
+          </div>
+          <div class="card-real-info">
+            <div class="percentual"><span id="real-percentual">--</span><small>%</small></div>
+            <div class="chip" id="real-status">carregando</div>
+            <h2 id="real-nome">Lixeira com sensor</h2>
+            <p class="muted" id="real-detalhe">Aguardando a primeira leitura do sensor.</p>
+          </div>
+        </div>
+        <p class="card-real-nota">Única lixeira com sensor físico: os dados vêm do HC-SR04 ligado ao ESP32 do protótipo.</p>
+      </article>
+    </div>
+  </section>
+
+  <!-- ============ AO VIVO ============ -->
+  <section class="secao" id="ao-vivo">
+    <div class="container">
+      <div class="secao-cabecalho">
+        <p class="sobretitulo">Ao vivo</p>
+        <h2>Situação das lixeiras agora</h2>
+        <p class="muted">Atualiza sozinho a cada 5 segundos, com lixeiras em pontos de Indaiatuba/SP.
+          Só <strong>uma lixeira é real</strong> e recebe os dados do sensor do protótipo;
+          as outras quatro são <strong>simuladas</strong> pelo sistema para mostrar como seria com vários pontos da cidade.</p>
+      </div>
+
+      <div class="resumo" id="resumo">
+        <div class="resumo-item"><span class="bolinha vazia"></span><strong id="qtd-vazia">-</strong> vazias</div>
+        <div class="resumo-item"><span class="bolinha parcial"></span><strong id="qtd-parcial">-</strong> parciais</div>
+        <div class="resumo-item"><span class="bolinha cheia"></span><strong id="qtd-cheia">-</strong> cheias</div>
+      </div>
+
+      <h3 class="grupo-titulo"><span class="tag tag-real">SENSOR REAL</span> Lixeira com sensor físico</h3>
+      <p class="grupo-desc">Recebe as medições do sensor ultrassônico HC-SR04 enviadas pelo ESP32.</p>
+      <div class="grade-lixeiras" id="grade-real">
+        <div class="carregando">Carregando...</div>
+      </div>
+
+      <h3 class="grupo-titulo"><span class="tag tag-simulada">SIMULADA</span> Lixeiras simuladas</h3>
+      <p class="grupo-desc">Não têm sensor: o próprio sistema gera os níveis, que sobem aos poucos e zeram como numa coleta.</p>
+      <div class="grade-lixeiras" id="grade-simuladas">
+        <div class="carregando">Carregando...</div>
+      </div>
+
+      <div class="grade-dupla">
+        <div class="painel">
+          <div class="painel-titulo">
+            <h3>Nível da lixeira real na última hora</h3>
+            <span class="muted pequeno" id="grafico-legenda"></span>
+          </div>
+          <div class="grafico"><canvas id="grafico-real" aria-label="Gráfico do nível da lixeira real"></canvas></div>
+        </div>
+        <div class="painel">
+          <div class="painel-titulo"><h3>Mapa das lixeiras</h3><span class="muted pequeno">Indaiatuba/SP</span></div>
+          <div class="mapa" id="mapa"></div>
+          <p class="aviso-mapa" id="mapa-aviso" hidden>O fundo do mapa precisa de internet; as posições das lixeiras continuam corretas.</p>
+          <div class="legenda-mapa">
+            <span><span class="marcador marcador-real legenda"></span>Sensor real</span>
+            <span><span class="marcador marcador-simulada legenda"></span>Simulada</span>
+            <span class="muted">a cor indica o status</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ PROBLEMA ============ -->
+  <section class="secao secao-clara">
+    <div class="container grade-dupla">
+      <div class="bloco problema">
+        <p class="sobretitulo vermelho">O problema</p>
+        <h2>Coleta às cegas</h2>
+        <p>Hoje o caminhão de lixo segue rotas e horários fixos, sem saber quanto cada lixeira tem.
+          Ele passa em lixeiras quase vazias, enquanto outras transbordam antes da próxima coleta.</p>
+        <ul class="lista">
+          <li>Viagens desnecessárias e mais combustível gasto</li>
+          <li>Lixo espalhado, mau cheiro e atração de animais</li>
+          <li>Nenhum dado para planejar a coleta</li>
+        </ul>
+      </div>
+      <div class="bloco solucao">
+        <p class="sobretitulo">A solução</p>
+        <h2>Coleta guiada por dados</h2>
+        <p>Cada lixeira ganha um sensor que informa o nível em tempo real. O gestor vê no painel quais estão cheias,
+          recebe alertas e monta a rota só com as lixeiras que precisam ser coletadas.</p>
+        <ul class="lista">
+          <li>Status por cores: verde, amarelo e vermelho</li>
+          <li>Alerta quando a lixeira passa do limite</li>
+          <li>Histórico e mapa com prévia da rota de coleta</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ COMO FUNCIONA ============ -->
+  <section class="secao" id="como-funciona">
+    <div class="container">
+      <div class="secao-cabecalho">
+        <p class="sobretitulo">Como funciona</p>
+        <h2>Do sensor até a tela do celular</h2>
+      </div>
+      <ol class="passos">
+        <li>
+          <span class="passo-num">1</span>
+          <h3>O sensor mede</h3>
+          <p>O sensor ultrassônico HC-SR04 fica no topo da lixeira, apontado para baixo, e mede a distância até o lixo.</p>
+        </li>
+        <li>
+          <span class="passo-num">2</span>
+          <h3>O ESP32 envia</h3>
+          <p>A cada 5 segundos, o ESP32 manda a medição pelo Wi-Fi, com HTTPS, para a API publicada na nuvem.</p>
+        </li>
+        <li>
+          <span class="passo-num">3</span>
+          <h3>A nuvem calcula</h3>
+          <p>A API converte a distância em porcentagem, guarda o histórico no banco de dados e classifica o status.</p>
+        </li>
+        <li>
+          <span class="passo-num">4</span>
+          <h3>Você acompanha</h3>
+          <p>O painel mostra o nível ao vivo, alerta as lixeiras cheias e sugere a rota de coleta.</p>
+        </li>
+      </ol>
+
+      <div class="formula">
+        <div>
+          <p class="sobretitulo">O cálculo</p>
+          <p class="formula-texto">nível = (altura − distância) ÷ altura × 100</p>
+          <p class="muted">Ex.: lixeira de 100 cm com o lixo a 30 cm do sensor → 70% cheia.</p>
+        </div>
+        <div class="legenda-status">
+          <span><span class="bolinha vazia"></span>até 50% · vazia</span>
+          <span><span class="bolinha parcial"></span>50% a 80% · parcial</span>
+          <span><span class="bolinha cheia"></span>80% ou mais · cheia</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ PROTÓTIPO ============ -->
+  <section class="secao secao-clara" id="prototipo">
+    <div class="container">
+      <div class="secao-cabecalho">
+        <p class="sobretitulo">Protótipo</p>
+        <h2>Feito com componentes de baixo custo</h2>
+        <p class="muted">Circuito em protoboard e maquete impressa em 3D representando um trecho da cidade.
+          O sensor fica na parte de cima da lixeira maior.</p>
+      </div>
+      <div class="galeria">
+        <figure><img src="/static/fotos/maquete-lixeira.jpg" alt="Maquete 3D com a lixeira maior, árvore e prédio" loading="lazy"><figcaption>Maquete 3D com a lixeira monitorada</figcaption></figure>
+        <figure><img src="/static/fotos/circuito.jpg" alt="ESP32 na protoboard ligado ao sensor HC-SR04" loading="lazy"><figcaption>ESP32 + sensor HC-SR04</figcaption></figure>
+        <figure><img src="/static/fotos/sensor.jpg" alt="Sensor ultrassônico HC-SR04 na mão" loading="lazy"><figcaption>Sensor ultrassônico HC-SR04</figcaption></figure>
+        <figure><img src="/static/fotos/maquete.jpg" alt="Maquete com casa, árvore, prédio e lixeiras" loading="lazy"><figcaption>Trecho da cidade em escala</figcaption></figure>
+      </div>
+      <p class="nota">No ECHO do sensor há um divisor de tensão com resistores, que reduz o sinal de 5 V para os 3,3 V aceitos pelo ESP32.</p>
+    </div>
+  </section>
+
+  <!-- ============ TECNOLOGIA ============ -->
+  <section class="secao" id="tecnologia">
+    <div class="container">
+      <div class="secao-cabecalho">
+        <p class="sobretitulo">Tecnologia</p>
+        <h2>O que tem por dentro</h2>
+      </div>
+      <div class="grade-tec">
+        <div class="tec"><h3>Hardware</h3><p>ESP32 e sensor ultrassônico HC-SR04</p></div>
+        <div class="tec"><h3>Conexão</h3><p>Wi-Fi com portal de configuração (WiFiManager) e envio por HTTPS</p></div>
+        <div class="tec"><h3>Back-end</h3><p>API em Python com FastAPI, publicada no Vercel</p></div>
+        <div class="tec"><h3>Banco de dados</h3><p>PostgreSQL na nuvem (Neon)</p></div>
+        <div class="tec"><h3>Front-end</h3><p>HTML, CSS e JavaScript, com Chart.js e mapa Leaflet / OpenStreetMap</p></div>
+        <div class="tec"><h3>Segurança</h3><p>Painel do gestor com login e senhas criptografadas</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ IMPACTO ============ -->
+  <section class="secao secao-verde">
+    <div class="container">
+      <div class="secao-cabecalho">
+        <p class="sobretitulo claro">Impacto</p>
+        <h2>Alinhado aos Objetivos de Desenvolvimento Sustentável</h2>
+      </div>
+      <div class="grade-dupla">
+        <div class="ods"><span class="ods-num">11</span><div><h3>Cidades e comunidades sustentáveis</h3><p>Ruas mais limpas e serviço de coleta mais eficiente.</p></div></div>
+        <div class="ods"><span class="ods-num">12</span><div><h3>Consumo e produção responsáveis</h3><p>Menos viagens, menos combustível e dados para planejar a gestão de resíduos.</p></div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ QR CODE ============ -->
+  <section class="secao" id="celular">
+    <div class="container qr-bloco">
+      <div class="qr-imagem"><img src="/static/qrcode.svg" alt="QR code para abrir o site no celular" width="200" height="200"></div>
+      <div>
+        <p class="sobretitulo">Leve no bolso</p>
+        <h2>Acompanhe pelo seu celular</h2>
+        <p class="muted">Aponte a câmera para o QR code ou acesse:</p>
+        <p class="url">coleta-inteligente-seven.vercel.app</p>
+        <button class="btn" id="botao-compartilhar" hidden>Compartilhar link</button>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="rodape">
+  <div class="container rodape-inner">
+    <div class="marca"><img src="/static/logo.svg" alt="" width="28" height="28"><span>Coleta Inteligente</span></div>
+    <p>Projeto Prático Integrado · Robótica e Sistemas Smart Embarcados – IoT · UNIMAX</p>
+    <a href="/painel">Área do gestor</a>
+  </div>
+</footer>
+
+</body>
+</html>
